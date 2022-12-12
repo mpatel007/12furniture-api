@@ -5,6 +5,7 @@ const db = require("../models");
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' })
 const User = db.user;
+const GoogleUser = db.googleUser;
 const Role = db.role;
 const Op = db.Op;
 const sharp = require('sharp');
@@ -47,7 +48,7 @@ async function sendemail(email, subject, text) {
   });
 
   let info = await transporter.sendMail({
-    from: '"Nikul Panchal 👻" <' + process.env.MAIL_USERNAME + '>',
+    from: '"Mohit 👻" <' + process.env.MAIL_USERNAME + '>',
     to: email,
     subject: subject,
     text: text,
@@ -141,9 +142,11 @@ exports.signin = (req, res) => {
       let authorities = [];
      
       user.getRoles().then(roles => {
+        console.log("roles===========>",roles)
         for (let i = 0; i < roles.length; i++) {
           authorities.push("ROLE_" + roles[i].name.toUpperCase());
         }
+        // console.log("authorities------------------------>",authorities)
         let token = jwt.sign({ id: user.id, roles: authorities[0] }, config.auth.secret, {
           expiresIn: 864000 // 24 hours
         });
@@ -185,6 +188,71 @@ exports.signin = (req, res) => {
       res.status(500).send({ message: err.message });
     });
 };
+
+
+exports.signinGoogle = (req, res) => {
+// Save user to database
+GoogleUser.create({
+  email: req.body.email ?? '',
+  name: req.body.name ?? '',
+  phone: req.body.contact ?? 123456789,
+  status: 1,
+  role_id: 1,
+  // title: req.body.title,
+  // zip: req.body.zip,
+  // company_name: req.body.company_name,
+  // document: req.body.document,
+  password: req.body.password ? bcrypt.hashSync(req.body.password, 8) : bcrypt.hashSync("123456", 8)
+})
+  .then(googleUser => {
+      // User role 1
+      // user.setRoles([1]).then(() => {
+        User.create({
+          email: req.body.email ?? '',
+          name: req.body.name ?? '',
+          phone: req.body.contact ?? 123456789,
+          status: 1,
+          role_id: 1,
+          password: req.body.password ? bcrypt.hashSync(req.body.password, 8) : bcrypt.hashSync("123456", 8)
+        })
+          .then(user => {
+            let token = jwt.sign({ id: user.dataValues.id, roles: '' }, config.auth.secret, {
+              expiresIn: 864000 // 24 hours
+            });
+
+
+            res.status(200).send({
+              status: 1,
+              id: user.dataValues.id,
+              username: user.dataValues.username,
+              name: user.dataValues.name,
+              phone: user.dataValues.phone,
+              email: user.dataValues.email,
+              roles: "",
+              roleName: 'user',
+              accessToken: token
+            });
+              // user.setRoles([1]).then(() => {
+              //   res.send({ status: 1, message: "User was registered successfully!" });
+              // });
+            
+          })
+          .catch(err => {
+            res.status(500).send({ message: err.message });
+          });
+
+
+        // res.send({ status: 1, message: "User was registered successfully!" });
+      // });
+    
+  })
+  .catch(err => {
+    res.status(500).send({ message: err.message });
+  });
+
+  
+
+}
 
 
 exports.resetpassword = (req, res) => {

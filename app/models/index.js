@@ -38,6 +38,7 @@ db.cart_items = require("./cart_item.model.js")(sequelize, Sequelize, DataTypes)
 db.order = require("./order.model.js")(sequelize, Sequelize, DataTypes);
 db.orderItem = require("./order_item.model.js")(sequelize, Sequelize, DataTypes);
 db.coupon = require("./coupon.model.js")(sequelize, Sequelize, DataTypes);
+db.googleUser = require("./googleUser.model.js")(sequelize, Sequelize, DataTypes);
 
 // db.checkouts = require("./checkout.model.js")(sequelize, Sequelize, DataTypes);
 // db.items = require("./item.model.js")(sequelize, Sequelize, DataTypes);

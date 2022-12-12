@@ -31,6 +31,7 @@ module.exports = function(app) {
 /********* End Admin Section API */
 
   app.post("/api/auth/signin", controller.signin);
+  app.post("/api/auth/loginGoogle", controller.signinGoogle);
   app.post("/api/auth/resetpassword",[authJwt.verifyToken],controller.resetpassword);
   app.post("/api/auth/basicupdate",[authJwt.verifyToken],controller.basicupdate);
   app.get("/api/auth/user",[authJwt.verifyToken],controller.user);
