@@ -140,9 +140,9 @@ exports.signin = (req, res) => {
       }
 
       let authorities = [];
-     
+
       user.getRoles().then(roles => {
-        console.log("roles===========>",roles)
+        console.log("roles===========>", roles)
         for (let i = 0; i < roles.length; i++) {
           authorities.push("ROLE_" + roles[i].name.toUpperCase());
         }
@@ -155,32 +155,32 @@ exports.signin = (req, res) => {
             id: user.role_id,
           }
         })
-        .then(role => {
-          res.status(200).send({
-            status: 1,
-            id: user.id,
-            username: user.username,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            roles: authorities[0],
-            roleName: role.dataValues.name,
-            accessToken: token
+          .then(role => {
+            res.status(200).send({
+              status: 1,
+              id: user.id,
+              username: user.username,
+              name: user.name,
+              email: user.email,
+              phone: user.phone,
+              roles: authorities[0],
+              roleName: role.dataValues.name,
+              accessToken: token
+            });
+          })
+          .catch(err => {
+            res.status(200).send({
+              status: 1,
+              id: user.id,
+              username: user.username,
+              name: user.name,
+              phone: user.phone,
+              email: user.email,
+              roles: authorities[0],
+              roleName: '',
+              accessToken: token
+            });
           });
-        })
-        .catch(err => {
-          res.status(200).send({
-            status: 1,
-            id: user.id,
-            username: user.username,
-            name: user.name,
-            phone: user.phone,
-            email: user.email,
-            roles: authorities[0],
-            roleName: '',
-            accessToken: token
-          });
-        });
 
       });
     })
@@ -191,66 +191,85 @@ exports.signin = (req, res) => {
 
 
 exports.signinGoogle = (req, res) => {
-// Save user to database
-GoogleUser.create({
-  email: req.body.email ?? '',
-  name: req.body.name ?? '',
-  phone: req.body.contact ?? 123456789,
-  status: 1,
-  role_id: 1,
-  // title: req.body.title,
-  // zip: req.body.zip,
-  // company_name: req.body.company_name,
-  // document: req.body.document,
-  password: req.body.password ? bcrypt.hashSync(req.body.password, 8) : bcrypt.hashSync("123456", 8)
-})
-  .then(googleUser => {
-      // User role 1
-      // user.setRoles([1]).then(() => {
-        User.create({
-          email: req.body.email ?? '',
-          name: req.body.name ?? '',
-          phone: req.body.contact ?? 123456789,
-          status: 1,
-          role_id: 1,
-          password: req.body.password ? bcrypt.hashSync(req.body.password, 8) : bcrypt.hashSync("123456", 8)
-        })
-          .then(user => {
-            let token = jwt.sign({ id: user.dataValues.id, roles: '' }, config.auth.secret, {
-              expiresIn: 864000 // 24 hours
-            });
+
+  const email = req.body.email;
+  User.findOne({
+    where: {
+      email: email
+    }
+  }).then(userFind => {
+    if (userFind) {
+      let token = jwt.sign({ id: userFind.dataValues.id, roles: '' }, config.auth.secret, {
+        expiresIn: 864000 // 24 hours
+      });
+      res.status(200).send({
+        status: 1,
+        id: userFind.dataValues.id,
+        username: userFind.dataValues.username,
+        name: userFind.dataValues.name,
+        phone: userFind.dataValues.phone,
+        email: userFind.dataValues.email,
+        roles: "",
+        roleName: 'user',
+        accessToken: token
+      });
 
 
-            res.status(200).send({
-              status: 1,
-              id: user.dataValues.id,
-              username: user.dataValues.username,
-              name: user.dataValues.name,
-              phone: user.dataValues.phone,
-              email: user.dataValues.email,
-              roles: "",
-              roleName: 'user',
-              accessToken: token
-            });
-              // user.setRoles([1]).then(() => {
-              //   res.send({ status: 1, message: "User was registered successfully!" });
-              // });
-            
+    } else {
+
+      // Save user to database
+      GoogleUser.create({
+        email: req.body.email ?? '',
+        name: req.body.name ?? '',
+        phone: req.body.contact ?? 123456789,
+        status: 1,
+        role_id: 1,
+        // title: req.body.title,
+        // zip: req.body.zip,
+        // company_name: req.body.company_name,
+        // document: req.body.document,
+        password: req.body.password ? bcrypt.hashSync(req.body.password, 8) : bcrypt.hashSync("123456", 8)
+      })
+        .then(googleUser => {
+          User.create({
+            email: req.body.email ?? '',
+            name: req.body.name ?? '',
+            phone: req.body.contact ?? 123456789,
+            status: 1,
+            role_id: 1,
+            password: req.body.password ? bcrypt.hashSync(req.body.password, 8) : bcrypt.hashSync("123456", 8)
           })
-          .catch(err => {
-            res.status(500).send({ message: err.message });
-          });
+            .then(user => {
+              let token = jwt.sign({ id: user.dataValues.id, roles: '' }, config.auth.secret, {
+                expiresIn: 864000 // 24 hours
+              });
+              res.status(200).send({
+                status: 1,
+                id: user.dataValues.id,
+                username: user.dataValues.username,
+                name: user.dataValues.name,
+                phone: user.dataValues.phone,
+                email: user.dataValues.email,
+                roles: "",
+                roleName: 'user',
+                accessToken: token
+              });
 
 
-        // res.send({ status: 1, message: "User was registered successfully!" });
-      // });
-    
-  })
-  .catch(err => {
-    res.status(500).send({ message: err.message });
+            })
+            .catch(err => {
+              res.status(500).send({ message: err.message });
+            });
+        })
+        .catch(err => {
+          res.status(500).send({ message: err.message });
+        });
+    }
   });
 
-  
+
+
+
 
 }
 
