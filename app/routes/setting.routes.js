@@ -34,5 +34,7 @@ router.post("/value", settingController.getSettingValueByName);
 
 router.get("/list", settingController.list);
 
+router.get("/name-value-list", settingController.nameValueList);
+
   app.use("/api/setting", router);
 };

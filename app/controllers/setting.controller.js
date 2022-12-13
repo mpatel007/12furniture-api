@@ -522,4 +522,27 @@ exports.list = async (req, res) => {
     });
 };
 
+
+exports.nameValueList = async (req, res) => {
+  sequelize
+    .authenticate()
+    .then(() => {
+      console.log("Connection has been established successfully.");
+    })
+    .catch((err) => {
+      console.error("Unable to connect to the database:", err);
+    });
+  var query = 'SELECT name,value FROM settings WHERE status = 1 GROUP BY id';
+
+  await sequelize
+    .query(query, { type: sequelize.QueryTypes.SELECT })
+    .then(function (rows) {
+      res.json({ status: 1, data: rows, total: Object.keys(rows).length });
+      // rows.count
+    })
+    .catch((err) => {
+      res.send({ status: 0, data: [] });
+    });
+};
+
 /**************************************************************************************************************************************************/
